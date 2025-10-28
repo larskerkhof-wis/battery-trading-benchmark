@@ -124,7 +124,7 @@ except (entsoe.NoMatchingDataError, ConnectionError, HTTPError):
 dayahead_length_of_timestep_hour = 1
 
 try:
-    imbalance_end_datetime = end_of_day_on_dayahead.replace(minute=45)
+    imbalance_end_datetime = dt.datetime.combine(user_end_date_input, dt.time(0, 0))
 
     imbalance_price_schedule = ImbalanceMarketPrices.hot_load_data(
         start_time=start_datetime_of_dayahead,
@@ -137,6 +137,12 @@ try:
 except (entsoe.NoMatchingDataError, ConnectionError, HTTPError):
     imbalance_price_schedule = pd.DataFrame()
     flag_no_imbalance_data = True
+
+flag_no_imbalance_data = getattr(imbalance_price_schedule, "empty", True)
+if flag_no_imbalance_data:
+    import streamlit as st
+    st.warning("No imbalance data returned. Continuing with day-ahead only.")
+
 
 # ---------- METADATA OF BENCHMARK ----------
 round_trip_efficiency = charge_efficiency * discharge_efficiency * 100
